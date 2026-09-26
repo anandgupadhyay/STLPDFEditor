@@ -7,19 +7,24 @@ struct ContentView: View {
     @State private var showPDFViewer = false
     @State private var selectedURL: URL?
 
+    /// Shared session so the dashboard can list and close documents opened in the viewer.
+    @ObservedObject private var session = PDFViewerSession.shared
+
+    private let themeColor = UIColor.systemIndigo
+
     var body: some View {
         NavigationView {
-            VStack(spacing: 32) {
+            VStack(spacing: 24) {
                 Image(systemName: "doc.richtext")
-                    .font(.system(size: 72))
+                    .font(.system(size: 64))
                     .foregroundStyle(.tint)
 
                 VStack(spacing: 8) {
-                    Text("STL PDF Editor")
+                    Text(PDFViewerLocalization.string("appTitle"))
                         .font(.largeTitle)
                         .fontWeight(.bold)
 
-                    Text("Pick any PDF from your device to open it in the viewer.")
+                    Text(PDFViewerLocalization.string("appSubtitle"))
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                         .multilineTextAlignment(.center)
@@ -29,27 +34,16 @@ struct ContentView: View {
                 Button {
                     showFilePicker = true
                 } label: {
-                    Label("Choose PDF", systemImage: "folder")
+                    Label(PDFViewerLocalization.string("appChoosePDF"), systemImage: "folder")
                         .frame(minWidth: 200)
                 }
                 .buttonStyle(.borderedProminent)
                 .controlSize(.large)
 
-                if let url = selectedURL {
-                    Button {
-                        showPDFViewer = true
-                    } label: {
-                        Label(url.lastPathComponent, systemImage: "doc.fill")
-                            .lineLimit(1)
-                            .truncationMode(.middle)
-                            .frame(minWidth: 200)
-                    }
-                    .buttonStyle(.bordered)
-                    .controlSize(.large)
-                }
+                openDocumentsSection
             }
             .padding()
-            .navigationTitle("PDF Editor")
+            .navigationTitle(PDFViewerLocalization.string("appNavTitle"))
             // File picker — iOS 14+ fileImporter handles security-scoped access.
             .fileImporter(
                 isPresented: $showFilePicker,
@@ -67,11 +61,59 @@ struct ContentView: View {
                         fileURL: url,
                         configuration: PDFViewerConfiguration(
                             features: PDFViewerFeatures(showsCloseButton: true),
-                            theme: PDFViewerTheme(primaryColor: UIColor.systemIndigo)
+                            theme: PDFViewerTheme(primaryColor: themeColor)
                         )
                     )
                 }
             }
+        }
+        .tint(Color(themeColor))
+    }
+
+    // MARK: - Open Documents (session)
+
+    @ViewBuilder
+    private var openDocumentsSection: some View {
+        if !session.openDocuments.isEmpty {
+            VStack(alignment: .leading, spacing: 8) {
+                HStack {
+                    Text(PDFViewerLocalization.string("openDocuments"))
+                        .font(.headline)
+                    Spacer()
+                    Button(PDFViewerLocalization.string("closeAll"), role: .destructive) {
+                        session.clear()
+                        showPDFViewer = false
+                    }
+                    .font(.subheadline)
+                }
+
+                List {
+                    ForEach(session.openDocuments) { document in
+                        Button {
+                            selectedURL = document.url
+                            showPDFViewer = true
+                        } label: {
+                            HStack(spacing: 12) {
+                                Image(systemName: "doc.text.fill")
+                                    .foregroundColor(.accentColor)
+                                Text(document.title)
+                                    .foregroundColor(.primary)
+                                    .lineLimit(1)
+                                Spacer()
+                                Image(systemName: "chevron.right")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                    }
+                    .onDelete { indexSet in
+                        indexSet.forEach { session.remove(session.openDocuments[$0]) }
+                    }
+                }
+                .listStyle(.plain)
+                .frame(maxHeight: 240)
+            }
+            .padding(.top, 8)
         }
     }
 }

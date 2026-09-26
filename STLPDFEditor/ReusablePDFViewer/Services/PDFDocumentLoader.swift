@@ -44,6 +44,13 @@ public final class PDFDocumentLoader: PDFDocumentLoading {
             .appendingPathComponent("PDFViewer", isDirectory: true)
         try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
         let destination = tempDir.appendingPathComponent(url.lastPathComponent)
+
+        // If the incoming URL is already our stable copy (e.g. reopening from the recents list),
+        // reuse it in place. Copying onto itself would delete the source before the copy.
+        if url.standardizedFileURL == destination.standardizedFileURL {
+            return url
+        }
+
         if FileManager.default.fileExists(atPath: destination.path) {
             try FileManager.default.removeItem(at: destination)
         }

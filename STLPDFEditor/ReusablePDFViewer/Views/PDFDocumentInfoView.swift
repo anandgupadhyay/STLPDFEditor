@@ -9,11 +9,11 @@ struct PDFDocumentInfoView: View {
     var body: some View {
         NavigationView {
             List {
-                row(label: "Title", value: metadata.title)
-                row(label: "Author", value: metadata.author)
-                row(label: "Subject", value: metadata.subject)
-                row(label: "Creator", value: metadata.creator)
-                row(label: "Pages", value: "\(metadata.pageCount)")
+                row(label: strings.title, value: metadata.title)
+                row(label: strings.author, value: metadata.author)
+                row(label: strings.subject, value: metadata.subject)
+                row(label: strings.creator, value: metadata.creator)
+                row(label: strings.pages, value: "\(metadata.pageCount)")
             }
             .navigationTitle(strings.documentInfo)
             .navigationBarTitleDisplayMode(.inline)

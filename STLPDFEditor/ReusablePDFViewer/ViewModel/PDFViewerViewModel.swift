@@ -25,6 +25,9 @@ final class PDFViewerViewModel: ObservableObject {
     @Published private(set) var hasOutline: Bool = false
     @Published private(set) var documentMetadata: PDFDocumentMetadata?
     @Published private(set) var documentTitle: String = ""
+    /// The stable URL under which the current document is registered in the session.
+    /// Differs from the originally supplied URL because files are copied to a session-local path.
+    @Published private(set) var activeDocumentURL: URL?
     @Published var showPasswordPrompt: Bool = false
     @Published var passwordError: String? = nil
 
@@ -33,6 +36,7 @@ final class PDFViewerViewModel: ObservableObject {
     private let loader: PDFDocumentLoading
     private let bookmarkStore: PDFBookmarkStoring
     private let lastPageStore: PDFLastPageStoring?
+    private let session: PDFViewerSession
     private(set) var document: PDFDocument?
     private(set) var documentIdentifier: String = ""
     private var loadedFileURL: URL?
@@ -52,12 +56,14 @@ final class PDFViewerViewModel: ObservableObject {
         loader: PDFDocumentLoading = PDFDocumentLoader(),
         bookmarkStore: PDFBookmarkStoring = UserDefaultsPDFBookmarkStore(),
         lastPageStore: PDFLastPageStoring? = nil,
+        session: PDFViewerSession = .shared,
         delegate: PDFViewerDelegate? = nil
     ) {
         self.configuration = configuration
         self.loader = loader
         self.bookmarkStore = bookmarkStore
         self.lastPageStore = lastPageStore
+        self.session = session
         self.delegate = delegate
         self.scrollDirection = configuration.behavior.initialScrollDirection
         self.displayMode = configuration.behavior.initialDisplayMode
@@ -69,9 +75,24 @@ final class PDFViewerViewModel: ObservableObject {
         loadingState = .loading
         pendingFileURL = url
         loadedFileURL = url
+        activeDocumentURL = nil
         documentIdentifier = configuration.documentIdentifier ?? url.standardizedFileURL.absoluteString
 
-        switch loader.load(from: url) {
+        // Load off the main thread so the loading indicator can render and the UI stays responsive
+        // while large PDFs are copied and parsed by PDFKit.
+        let loader = self.loader
+        Task.detached(priority: .userInitiated) {
+            let result = loader.load(from: url)
+            await MainActor.run { [weak self] in
+                self?.applyLoadResult(result, for: url)
+            }
+        }
+    }
+
+    /// Applies a completed load result on the main actor, ignoring results from a superseded load.
+    private func applyLoadResult(_ result: Result<PDFDocument, PDFViewerError>, for url: URL) {
+        guard url == pendingFileURL else { return }
+        switch result {
         case .success(let doc):
             if doc.isLocked {
                 document = doc
@@ -117,6 +138,15 @@ final class PDFViewerViewModel: ObservableObject {
         buildOutline(from: doc)
         buildMetadata(from: doc)
         resolveDocumentTitle(from: doc)
+
+        // Register in the session using the stable (session-local) URL so it can be reopened later.
+        let stableURL = doc.documentURL ?? loadedFileURL
+        if let stableURL {
+            activeDocumentURL = stableURL
+            ensureOriginalBackup(for: stableURL)
+            session.register(url: stableURL, title: documentTitle)
+        }
+
         delegate?.pdfViewerDidOpenDocument?()
     }
 
@@ -333,6 +363,84 @@ final class PDFViewerViewModel: ObservableObject {
         } else {
             documentTitle = loadedFileURL?.deletingPathExtension().lastPathComponent ?? ""
         }
+    }
+
+    // MARK: - Page Editing
+
+    /// Rebuilds the document from the given ordered original page indices (removed pages omitted),
+    /// writes it to the working file, and reloads the viewer. Returns false on failure.
+    @discardableResult
+    func applyPageEdits(orderedOriginalIndices: [Int]) -> Bool {
+        guard let source = document, let url = activeDocumentURL, !orderedOriginalIndices.isEmpty else {
+            return false
+        }
+
+        let newDocument = PDFDocument()
+        var insertIndex = 0
+        for originalIndex in orderedOriginalIndices {
+            guard let page = source.page(at: originalIndex)?.copy() as? PDFPage else { continue }
+            newDocument.insert(page, at: insertIndex)
+            insertIndex += 1
+        }
+        guard newDocument.pageCount > 0 else { return false }
+
+        // Write to a scratch file first, then atomically replace the working file, avoiding
+        // corruption from writing over a file the source document may still reference.
+        let scratchURL = url.deletingLastPathComponent()
+            .appendingPathComponent("edit-\(UUID().uuidString).pdf")
+        guard newDocument.write(to: scratchURL) else { return false }
+        do {
+            if FileManager.default.fileExists(atPath: url.path) {
+                try FileManager.default.removeItem(at: url)
+            }
+            try FileManager.default.moveItem(at: scratchURL, to: url)
+        } catch {
+            try? FileManager.default.removeItem(at: scratchURL)
+            return false
+        }
+
+        reloadCurrentDocument()
+        return true
+    }
+
+    /// Restores the pristine original document (all pages) captured at first open. Returns false on failure.
+    @discardableResult
+    func resetToOriginal() -> Bool {
+        guard let url = activeDocumentURL else { return false }
+        let backup = originalBackupURL(for: url)
+        guard FileManager.default.fileExists(atPath: backup.path) else { return false }
+        do {
+            if FileManager.default.fileExists(atPath: url.path) {
+                try FileManager.default.removeItem(at: url)
+            }
+            try FileManager.default.copyItem(at: backup, to: url)
+        } catch {
+            return false
+        }
+        reloadCurrentDocument()
+        return true
+    }
+
+    private func reloadCurrentDocument() {
+        guard let url = activeDocumentURL else { return }
+        load(from: url)
+    }
+
+    /// Captures a pristine copy of the document the first time it is opened, used by reset.
+    private func ensureOriginalBackup(for url: URL) {
+        let backup = originalBackupURL(for: url)
+        guard !FileManager.default.fileExists(atPath: backup.path) else { return }
+        try? FileManager.default.createDirectory(
+            at: backup.deletingLastPathComponent(),
+            withIntermediateDirectories: true
+        )
+        try? FileManager.default.copyItem(at: url, to: backup)
+    }
+
+    private func originalBackupURL(for url: URL) -> URL {
+        FileManager.default.temporaryDirectory
+            .appendingPathComponent("PDFViewer/originals", isDirectory: true)
+            .appendingPathComponent(url.lastPathComponent)
     }
 
     // MARK: - Close

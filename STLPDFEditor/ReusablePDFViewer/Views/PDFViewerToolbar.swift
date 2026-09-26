@@ -13,6 +13,7 @@ struct PDFViewerToolbar: View {
     @Binding var showGoToPage: Bool
     @Binding var showDocumentInfo: Bool
     @Binding var showShare: Bool
+    @Binding var showRecents: Bool
     var onClose: (() -> Void)?
 
     private var features: PDFViewerFeatures { configuration.features }
@@ -36,10 +37,16 @@ struct PDFViewerToolbar: View {
                     Button(action: { onClose?() }) {
                         Image(systemName: "chevron.left")
                             .font(.system(size: 17, weight: .semibold))
-                            .padding(.trailing, 8)
                     }
-                    .accessibilityLabel("Back")
+                    .accessibilityLabel(strings.back)
+                    .padding(.trailing, 20)
                 }
+
+                Button { showRecents = true } label: {
+                    Image(systemName: "list.bullet.rectangle")
+                        .font(.system(size: 17))
+                }
+                .accessibilityLabel(strings.openDocuments)
 
                 Spacer()
 
@@ -70,7 +77,7 @@ struct PDFViewerToolbar: View {
             Image(systemName: viewModel.isCurrentPageBookmarked ? "bookmark.fill" : "bookmark")
                 .font(.system(size: 17))
         }
-        .accessibilityLabel(viewModel.isCurrentPageBookmarked ? "Remove Bookmark" : "Add Bookmark")
+        .accessibilityLabel(viewModel.isCurrentPageBookmarked ? strings.removeBookmark : strings.addBookmark)
     }
 
     private var moreMenu: some View {
@@ -78,16 +85,16 @@ struct PDFViewerToolbar: View {
             if features.pageNavigation {
                 Section {
                     Button { viewModel.goToFirstPage() } label: {
-                        Label("First Page", systemImage: "arrow.up.to.line")
+                        Label(strings.firstPage, systemImage: "arrow.up.to.line")
                     }
                     Button { viewModel.goToPreviousPage() } label: {
-                        Label("Previous Page", systemImage: "chevron.up")
+                        Label(strings.previousPage, systemImage: "chevron.up")
                     }
                     Button { viewModel.goToNextPage() } label: {
-                        Label("Next Page", systemImage: "chevron.down")
+                        Label(strings.nextPage, systemImage: "chevron.down")
                     }
                     Button { viewModel.goToLastPage() } label: {
-                        Label("Last Page", systemImage: "arrow.down.to.line")
+                        Label(strings.lastPage, systemImage: "arrow.down.to.line")
                     }
                 }
             }
@@ -135,13 +142,13 @@ struct PDFViewerToolbar: View {
             if features.zoomControls {
                 Section {
                     Button { viewModel.zoomIn() } label: {
-                        Label("Zoom In", systemImage: "plus.magnifyingglass")
+                        Label(strings.zoomIn, systemImage: "plus.magnifyingglass")
                     }
                     Button { viewModel.zoomOut() } label: {
-                        Label("Zoom Out", systemImage: "minus.magnifyingglass")
+                        Label(strings.zoomOut, systemImage: "minus.magnifyingglass")
                     }
                     Button { viewModel.resetZoom() } label: {
-                        Label("Reset Zoom", systemImage: "arrow.up.left.and.arrow.down.right")
+                        Label(strings.resetZoom, systemImage: "arrow.up.left.and.arrow.down.right")
                     }
                 }
             }

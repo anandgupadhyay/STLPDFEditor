@@ -43,6 +43,14 @@ struct PDFKitView: UIViewRepresentable {
     }
 
     func updateUIView(_ pdfView: PDFView, context: Context) {
+        // Reopening a different document within the same viewer swaps the document in place.
+        if pdfView.document !== document {
+            pdfView.document = document
+            DispatchQueue.main.async {
+                if let page = document.page(at: 0) { pdfView.go(to: page) }
+            }
+        }
+
         // Compare against viewModel state, not the initial config.
         // Using initial config caused direction resets on every SwiftUI re-render.
         let targetDirection = viewModel.scrollDirection.pdfDisplayDirection

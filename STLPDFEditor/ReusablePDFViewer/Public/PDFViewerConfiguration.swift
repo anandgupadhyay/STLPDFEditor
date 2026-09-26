@@ -49,6 +49,8 @@ public struct PDFViewerFeatures {
     public var documentInfo: Bool
     public var showsCloseButton: Bool
     public var restoresLastViewedPage: Bool
+    /// Enables reordering/removing pages from the thumbnail browser and saving the result.
+    public var pageEditing: Bool
 
     public init(
         bookmarks: Bool = true,
@@ -63,7 +65,8 @@ public struct PDFViewerFeatures {
         printing: Bool = true,
         documentInfo: Bool = true,
         showsCloseButton: Bool = false,
-        restoresLastViewedPage: Bool = false
+        restoresLastViewedPage: Bool = false,
+        pageEditing: Bool = true
     ) {
         self.bookmarks = bookmarks
         self.search = search
@@ -78,6 +81,7 @@ public struct PDFViewerFeatures {
         self.documentInfo = documentInfo
         self.showsCloseButton = showsCloseButton
         self.restoresLastViewedPage = restoresLastViewedPage
+        self.pageEditing = pageEditing
     }
 }
 
@@ -111,7 +115,8 @@ public struct PDFViewerTheme {
 
 // MARK: - Strings
 
-/// All user-facing strings. Override to localize or white-label.
+/// All user-facing strings. Defaults are localized for the device language.
+/// Override any value to white-label or force a specific wording.
 public struct PDFViewerStrings {
     public var bookmarks: String
     public var search: String
@@ -137,32 +142,107 @@ public struct PDFViewerStrings {
     public var more: String
     public var noOutline: String
     public var loading: String
+    public var back: String
+    public var firstPage: String
+    public var previousPage: String
+    public var nextPage: String
+    public var lastPage: String
+    public var zoomIn: String
+    public var zoomOut: String
+    public var resetZoom: String
+    public var addBookmark: String
+    public var removeBookmark: String
+    public var openDocuments: String
+    public var closeAll: String
+    public var close: String
+    public var noOpenDocuments: String
+    public var searching: String
+    public var enterKeyword: String
+    public var title: String
+    public var author: String
+    public var subject: String
+    public var creator: String
+    public var pages: String
+    public var untitled: String
+    /// Format string with two integer arguments: total matches and total pages.
+    public var searchSummaryFormat: String
+    /// Format string with one integer argument: number of occurrences on a page.
+    public var occurrencesFormat: String
+    /// Format string with one string argument: the search query.
+    public var noMatchesForFormat: String
+    public var edit: String
+    public var save: String
+    public var reset: String
+    public var editPages: String
+    public var saveChangesTitle: String
+    public var saveChangesMessage: String
+    public var resetChangesTitle: String
+    public var resetChangesMessage: String
+    public var saveFailed: String
+    public var resetFailed: String
+    public var minOnePage: String
 
     public init(
-        bookmarks: String = "Bookmarks",
-        search: String = "Search",
-        goToPage: String = "Go to Page",
-        cancel: String = "Cancel",
-        done: String = "Done",
-        page: String = "Page",
-        of: String = "of",
-        vertical: String = "Vertical",
-        horizontal: String = "Horizontal",
-        print: String = "Print",
-        share: String = "Share",
-        noBookmarks: String = "No Bookmarks",
-        noSearchResults: String = "No Results",
-        invalidPage: String = "Invalid page number.",
-        unableToOpenPDF: String = "Unable to open PDF.",
-        enterPassword: String = "Enter Password",
-        tableOfContents: String = "Table of Contents",
-        thumbnails: String = "Thumbnails",
-        documentInfo: String = "Document Info",
-        scrollDirection: String = "Scroll Direction",
-        displayMode: String = "Display Mode",
-        more: String = "More",
-        noOutline: String = "This document does not contain a table of contents.",
-        loading: String = "Loading\u{2026}"
+        bookmarks: String = PDFViewerLocalization.string("bookmarks"),
+        search: String = PDFViewerLocalization.string("search"),
+        goToPage: String = PDFViewerLocalization.string("goToPage"),
+        cancel: String = PDFViewerLocalization.string("cancel"),
+        done: String = PDFViewerLocalization.string("done"),
+        page: String = PDFViewerLocalization.string("page"),
+        of: String = PDFViewerLocalization.string("of"),
+        vertical: String = PDFViewerLocalization.string("vertical"),
+        horizontal: String = PDFViewerLocalization.string("horizontal"),
+        print: String = PDFViewerLocalization.string("print"),
+        share: String = PDFViewerLocalization.string("share"),
+        noBookmarks: String = PDFViewerLocalization.string("noBookmarks"),
+        noSearchResults: String = PDFViewerLocalization.string("noSearchResults"),
+        invalidPage: String = PDFViewerLocalization.string("invalidPage"),
+        unableToOpenPDF: String = PDFViewerLocalization.string("unableToOpenPDF"),
+        enterPassword: String = PDFViewerLocalization.string("enterPassword"),
+        tableOfContents: String = PDFViewerLocalization.string("tableOfContents"),
+        thumbnails: String = PDFViewerLocalization.string("thumbnails"),
+        documentInfo: String = PDFViewerLocalization.string("documentInfo"),
+        scrollDirection: String = PDFViewerLocalization.string("scrollDirection"),
+        displayMode: String = PDFViewerLocalization.string("displayMode"),
+        more: String = PDFViewerLocalization.string("more"),
+        noOutline: String = PDFViewerLocalization.string("noOutline"),
+        loading: String = PDFViewerLocalization.string("loading"),
+        back: String = PDFViewerLocalization.string("back"),
+        firstPage: String = PDFViewerLocalization.string("firstPage"),
+        previousPage: String = PDFViewerLocalization.string("previousPage"),
+        nextPage: String = PDFViewerLocalization.string("nextPage"),
+        lastPage: String = PDFViewerLocalization.string("lastPage"),
+        zoomIn: String = PDFViewerLocalization.string("zoomIn"),
+        zoomOut: String = PDFViewerLocalization.string("zoomOut"),
+        resetZoom: String = PDFViewerLocalization.string("resetZoom"),
+        addBookmark: String = PDFViewerLocalization.string("addBookmark"),
+        removeBookmark: String = PDFViewerLocalization.string("removeBookmark"),
+        openDocuments: String = PDFViewerLocalization.string("openDocuments"),
+        closeAll: String = PDFViewerLocalization.string("closeAll"),
+        close: String = PDFViewerLocalization.string("close"),
+        noOpenDocuments: String = PDFViewerLocalization.string("noOpenDocuments"),
+        searching: String = PDFViewerLocalization.string("searching"),
+        enterKeyword: String = PDFViewerLocalization.string("enterKeyword"),
+        title: String = PDFViewerLocalization.string("title"),
+        author: String = PDFViewerLocalization.string("author"),
+        subject: String = PDFViewerLocalization.string("subject"),
+        creator: String = PDFViewerLocalization.string("creator"),
+        pages: String = PDFViewerLocalization.string("pages"),
+        untitled: String = PDFViewerLocalization.string("untitled"),
+        searchSummaryFormat: String = PDFViewerLocalization.string("searchSummaryFormat"),
+        occurrencesFormat: String = PDFViewerLocalization.string("occurrencesFormat"),
+        noMatchesForFormat: String = PDFViewerLocalization.string("noMatchesForFormat"),
+        edit: String = PDFViewerLocalization.string("edit"),
+        save: String = PDFViewerLocalization.string("save"),
+        reset: String = PDFViewerLocalization.string("reset"),
+        editPages: String = PDFViewerLocalization.string("editPages"),
+        saveChangesTitle: String = PDFViewerLocalization.string("saveChangesTitle"),
+        saveChangesMessage: String = PDFViewerLocalization.string("saveChangesMessage"),
+        resetChangesTitle: String = PDFViewerLocalization.string("resetChangesTitle"),
+        resetChangesMessage: String = PDFViewerLocalization.string("resetChangesMessage"),
+        saveFailed: String = PDFViewerLocalization.string("saveFailed"),
+        resetFailed: String = PDFViewerLocalization.string("resetFailed"),
+        minOnePage: String = PDFViewerLocalization.string("minOnePage")
     ) {
         self.bookmarks = bookmarks
         self.search = search
@@ -188,6 +268,42 @@ public struct PDFViewerStrings {
         self.more = more
         self.noOutline = noOutline
         self.loading = loading
+        self.back = back
+        self.firstPage = firstPage
+        self.previousPage = previousPage
+        self.nextPage = nextPage
+        self.lastPage = lastPage
+        self.zoomIn = zoomIn
+        self.zoomOut = zoomOut
+        self.resetZoom = resetZoom
+        self.addBookmark = addBookmark
+        self.removeBookmark = removeBookmark
+        self.openDocuments = openDocuments
+        self.closeAll = closeAll
+        self.close = close
+        self.noOpenDocuments = noOpenDocuments
+        self.searching = searching
+        self.enterKeyword = enterKeyword
+        self.title = title
+        self.author = author
+        self.subject = subject
+        self.creator = creator
+        self.pages = pages
+        self.untitled = untitled
+        self.searchSummaryFormat = searchSummaryFormat
+        self.occurrencesFormat = occurrencesFormat
+        self.noMatchesForFormat = noMatchesForFormat
+        self.edit = edit
+        self.save = save
+        self.reset = reset
+        self.editPages = editPages
+        self.saveChangesTitle = saveChangesTitle
+        self.saveChangesMessage = saveChangesMessage
+        self.resetChangesTitle = resetChangesTitle
+        self.resetChangesMessage = resetChangesMessage
+        self.saveFailed = saveFailed
+        self.resetFailed = resetFailed
+        self.minOnePage = minOnePage
     }
 }
 

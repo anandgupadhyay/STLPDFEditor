@@ -27,7 +27,7 @@ struct PDFOutlineView: View {
                             isPresented = false
                         } label: {
                             HStack {
-                                Text(item.title.isEmpty ? "(untitled)" : item.title)
+                                Text(item.title.isEmpty ? strings.untitled : item.title)
                                 Spacer()
                                 if let page = item.pageIndex {
                                     Text("\(page + 1)")

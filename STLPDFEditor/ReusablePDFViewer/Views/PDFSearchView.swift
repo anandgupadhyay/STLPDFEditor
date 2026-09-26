@@ -60,7 +60,7 @@ struct PDFSearchView: View {
                 isFieldFocused = false
                 viewModel.performSearch()
             } label: {
-                Text("Search")
+                Text(strings.search)
                     .fontWeight(.medium)
             }
             .disabled(viewModel.searchText.trimmingCharacters(in: .whitespaces).isEmpty)
@@ -78,7 +78,7 @@ struct PDFSearchView: View {
             Spacer()
             VStack(spacing: 12) {
                 ProgressView()
-                Text("Searching\u{2026}")
+                Text(strings.searching)
                     .foregroundColor(.secondary)
                     .font(.subheadline)
             }
@@ -89,7 +89,7 @@ struct PDFSearchView: View {
             resultsList
         } else {
             Spacer()
-            Text("Enter a keyword to search the document.")
+            Text(strings.enterKeyword)
                 .foregroundColor(.secondary)
                 .font(.subheadline)
                 .multilineTextAlignment(.center)
@@ -104,7 +104,7 @@ struct PDFSearchView: View {
         List {
             Section {
                 let totalMatches = viewModel.searchResults.reduce(0) { $0 + $1.matchCount }
-                Text("\(totalMatches) match\(totalMatches == 1 ? "" : "es") on \(viewModel.searchResults.count) page\(viewModel.searchResults.count == 1 ? "" : "s")")
+                Text(String(format: strings.searchSummaryFormat, totalMatches, viewModel.searchResults.count))
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
@@ -123,7 +123,7 @@ struct PDFSearchView: View {
                             Text("\(strings.page) \(result.displayPageNumber)")
                                 .font(.body)
                                 .foregroundColor(.primary)
-                            Text("\(result.matchCount) occurrence\(result.matchCount == 1 ? "" : "s")")
+                            Text(String(format: strings.occurrencesFormat, result.matchCount))
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
@@ -152,7 +152,7 @@ struct PDFSearchView: View {
             Text(strings.noSearchResults)
                 .font(.headline)
                 .foregroundColor(.secondary)
-            Text("No matches found for \"\(viewModel.searchText)\"")
+            Text(String(format: strings.noMatchesForFormat, viewModel.searchText))
                 .font(.subheadline)
                 .foregroundColor(Color(.tertiaryLabel))
                 .multilineTextAlignment(.center)
