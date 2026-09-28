@@ -3,7 +3,8 @@ import Foundation
 
 /// Default implementation of PDFDocumentLoading that validates and loads local file URLs.
 /// Handles security-scoped URLs (e.g. from UIDocumentPickerViewController / fileImporter)
-/// by briefly acquiring access, copying to a stable temp location, then releasing.
+/// by briefly acquiring access, copying to a persistent app-support location, then releasing.
+/// The persistent copy lets opened files survive app relaunches.
 public final class PDFDocumentLoader: PDFDocumentLoading {
 
     public init() {}
@@ -19,11 +20,11 @@ public final class PDFDocumentLoader: PDFDocumentLoading {
             return .failure(.fileNotFound)
         }
 
-        // Copy to a stable temp path so PDFKit can keep the file open after
-        // the security scope ends (security-scoped access is released on defer).
+        // Copy to a stable persistent path so PDFKit can keep the file open after the security
+        // scope ends, and so the document remains available across future app launches.
         let stableURL: URL
         do {
-            stableURL = try copyToTemporaryLocation(url)
+            stableURL = try copyToPersistentLocation(url)
         } catch {
             return .failure(.unableToLoad)
         }
@@ -39,13 +40,11 @@ public final class PDFDocumentLoader: PDFDocumentLoading {
 
     // MARK: - Private
 
-    private func copyToTemporaryLocation(_ url: URL) throws -> URL {
-        let tempDir = FileManager.default.temporaryDirectory
-            .appendingPathComponent("PDFViewer", isDirectory: true)
-        try FileManager.default.createDirectory(at: tempDir, withIntermediateDirectories: true)
-        let destination = tempDir.appendingPathComponent(url.lastPathComponent)
+    private func copyToPersistentLocation(_ url: URL) throws -> URL {
+        let destination = PDFViewerStorage.documentsDirectory
+            .appendingPathComponent(url.lastPathComponent)
 
-        // If the incoming URL is already our stable copy (e.g. reopening from the recents list),
+        // If the incoming URL is already our stable copy (e.g. reopening from the saved list),
         // reuse it in place. Copying onto itself would delete the source before the copy.
         if url.standardizedFileURL == destination.standardizedFileURL {
             return url
