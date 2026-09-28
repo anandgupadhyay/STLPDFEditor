@@ -368,37 +368,43 @@ final class PDFViewerViewModel: ObservableObject {
     // MARK: - Page Editing
 
     /// Rebuilds the document from the given ordered original page indices (removed pages omitted),
-    /// writes it to the working file, and reloads the viewer. Returns false on failure.
+    /// writes it to the working file, and reloads the viewer. The heavy build/write runs off the
+    /// main thread so a progress indicator can be shown. Returns false on failure.
     @discardableResult
-    func applyPageEdits(orderedOriginalIndices: [Int]) -> Bool {
+    func applyPageEdits(orderedOriginalIndices: [Int]) async -> Bool {
         guard let source = document, let url = activeDocumentURL, !orderedOriginalIndices.isEmpty else {
             return false
         }
+        let indices = orderedOriginalIndices
 
-        let newDocument = PDFDocument()
-        var insertIndex = 0
-        for originalIndex in orderedOriginalIndices {
-            guard let page = source.page(at: originalIndex)?.copy() as? PDFPage else { continue }
-            newDocument.insert(page, at: insertIndex)
-            insertIndex += 1
-        }
-        guard newDocument.pageCount > 0 else { return false }
-
-        // Write to a scratch file first, then atomically replace the working file, avoiding
-        // corruption from writing over a file the source document may still reference.
-        let scratchURL = url.deletingLastPathComponent()
-            .appendingPathComponent("edit-\(UUID().uuidString).pdf")
-        guard newDocument.write(to: scratchURL) else { return false }
-        do {
-            if FileManager.default.fileExists(atPath: url.path) {
-                try FileManager.default.removeItem(at: url)
+        let success = await Task.detached(priority: .userInitiated) { () -> Bool in
+            let newDocument = PDFDocument()
+            var insertIndex = 0
+            for originalIndex in indices {
+                guard let page = source.page(at: originalIndex)?.copy() as? PDFPage else { continue }
+                newDocument.insert(page, at: insertIndex)
+                insertIndex += 1
             }
-            try FileManager.default.moveItem(at: scratchURL, to: url)
-        } catch {
-            try? FileManager.default.removeItem(at: scratchURL)
-            return false
-        }
+            guard newDocument.pageCount > 0 else { return false }
 
+            // Write to a scratch file first, then atomically replace the working file, avoiding
+            // corruption from writing over a file the source document may still reference.
+            let scratchURL = url.deletingLastPathComponent()
+                .appendingPathComponent("edit-\(UUID().uuidString).pdf")
+            guard newDocument.write(to: scratchURL) else { return false }
+            do {
+                if FileManager.default.fileExists(atPath: url.path) {
+                    try FileManager.default.removeItem(at: url)
+                }
+                try FileManager.default.moveItem(at: scratchURL, to: url)
+            } catch {
+                try? FileManager.default.removeItem(at: scratchURL)
+                return false
+            }
+            return true
+        }.value
+
+        guard success else { return false }
         reloadCurrentDocument()
         return true
     }

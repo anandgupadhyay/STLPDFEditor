@@ -181,6 +181,7 @@ public struct PDFViewerStrings {
     public var saveFailed: String
     public var resetFailed: String
     public var minOnePage: String
+    public var saving: String
 
     public init(
         bookmarks: String = PDFViewerLocalization.string("bookmarks"),
@@ -242,7 +243,8 @@ public struct PDFViewerStrings {
         resetChangesMessage: String = PDFViewerLocalization.string("resetChangesMessage"),
         saveFailed: String = PDFViewerLocalization.string("saveFailed"),
         resetFailed: String = PDFViewerLocalization.string("resetFailed"),
-        minOnePage: String = PDFViewerLocalization.string("minOnePage")
+        minOnePage: String = PDFViewerLocalization.string("minOnePage"),
+        saving: String = PDFViewerLocalization.string("saving")
     ) {
         self.bookmarks = bookmarks
         self.search = search
@@ -304,6 +306,7 @@ public struct PDFViewerStrings {
         self.saveFailed = saveFailed
         self.resetFailed = resetFailed
         self.minOnePage = minOnePage
+        self.saving = saving
     }
 }
 

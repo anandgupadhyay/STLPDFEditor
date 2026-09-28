@@ -93,7 +93,8 @@ public enum PDFViewerLocalization {
             "resetChangesMessage": "This will restore the original PDF with all pages.",
             "saveFailed": "Failed to save changes.",
             "resetFailed": "Failed to reset the document.",
-            "minOnePage": "A document must contain at least one page."
+            "minOnePage": "A document must contain at least one page.",
+            "saving": "Saving\u{2026}"
         ],
         "sw": [
             "back": "Rudi",
@@ -159,7 +160,8 @@ public enum PDFViewerLocalization {
             "resetChangesMessage": "Hii itarejesha PDF asili na kurasa zote.",
             "saveFailed": "Imeshindwa kuhifadhi mabadiliko.",
             "resetFailed": "Imeshindwa kuweka upya hati.",
-            "minOnePage": "Hati lazima iwe na angalau ukurasa mmoja."
+            "minOnePage": "Hati lazima iwe na angalau ukurasa mmoja.",
+            "saving": "Inahifadhi\u{2026}"
         ],
         "fr": [
             "back": "Retour",
@@ -225,7 +227,8 @@ public enum PDFViewerLocalization {
             "resetChangesMessage": "Cela restaurera le PDF d'origine avec toutes les pages.",
             "saveFailed": "Échec de l'enregistrement des modifications.",
             "resetFailed": "Échec de la réinitialisation du document.",
-            "minOnePage": "Un document doit contenir au moins une page."
+            "minOnePage": "Un document doit contenir au moins une page.",
+            "saving": "Enregistrement\u{2026}"
         ],
         "am": [
             "back": "ተመለስ",
@@ -291,7 +294,8 @@ public enum PDFViewerLocalization {
             "resetChangesMessage": "ይህ ዋናውን ፒዲኤፍ ከሁሉም ገጾች ጋር ወደ ነበረበት ይመልሳል።",
             "saveFailed": "ለውጦችን ማስቀመጥ አልተሳካም።",
             "resetFailed": "ሰነዱን ዳግም ማስጀመር አልተሳካም።",
-            "minOnePage": "ሰነድ ቢያንስ አንድ ገጽ ሊኖረው ይገባል።"
+            "minOnePage": "ሰነድ ቢያንስ አንድ ገጽ ሊኖረው ይገባል።",
+            "saving": "በማስቀመጥ ላይ\u{2026}"
         ],
         "de": [
             "back": "Zurück",
@@ -357,7 +361,8 @@ public enum PDFViewerLocalization {
             "resetChangesMessage": "Dies stellt das ursprüngliche PDF mit allen Seiten wieder her.",
             "saveFailed": "Änderungen konnten nicht gespeichert werden.",
             "resetFailed": "Dokument konnte nicht zurückgesetzt werden.",
-            "minOnePage": "Ein Dokument muss mindestens eine Seite enthalten."
+            "minOnePage": "Ein Dokument muss mindestens eine Seite enthalten.",
+            "saving": "Wird gespeichert\u{2026}"
         ],
         "es": [
             "back": "Atrás",
@@ -423,7 +428,8 @@ public enum PDFViewerLocalization {
             "resetChangesMessage": "Esto restaurará el PDF original con todas las páginas.",
             "saveFailed": "No se pudieron guardar los cambios.",
             "resetFailed": "No se pudo restablecer el documento.",
-            "minOnePage": "Un documento debe contener al menos una página."
+            "minOnePage": "Un documento debe contener al menos una página.",
+            "saving": "Guardando\u{2026}"
         ]
     ]
 }
